@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**开发者工具箱** — 72 款实用工具，基于 Cloudflare Pages Functions 全栈部署
+**开发者工具箱** — 87 款实用工具，基于 Cloudflare Pages Functions 全栈部署
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/your-username/it-toolbox)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
