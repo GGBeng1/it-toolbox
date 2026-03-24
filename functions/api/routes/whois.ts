@@ -39,104 +39,92 @@ whoisRoute.get('/', async (c) => {
   } catch {}
 
   try {
-    const res = await fetch(`https://api.ip2whois.com/v2?key=demo&domain=${encodeURIComponent(cleanDomain)}`)
-    
-    if (!res.ok) {
-      return c.json({ error: 'WHOIS query failed', details: `HTTP ${res.status}` }, 502)
-    }
-
-    const data = await res.json() as Record<string, unknown>
-    
-    if (data.error) {
-      return c.json({ error: String(data.error) }, 400)
-    }
-
-    const result: WhoisResult = {
-      domain: cleanDomain,
-    }
-
-    if (data.registrar) {
-      result.registrar = String(data.registrar)
-    }
-    if (data.create_date) {
-      result.createdDate = String(data.create_date)
-    }
-    if (data.update_date) {
-      result.updatedDate = String(data.update_date)
-    }
-    if (data.expire_date) {
-      result.expiryDate = String(data.expire_date)
-    }
-    if (data.domain_status && Array.isArray(data.domain_status)) {
-      result.status = data.domain_status.map(String)
-    }
-    if (data.nameservers && Array.isArray(data.nameservers)) {
-      result.nameservers = data.nameservers.map(String)
-    }
-
-    if (data.registrant) {
-      const reg = data.registrant as Record<string, unknown>
-      result.registrant = {
-        name: reg.name ? String(reg.name) : undefined,
-        organization: reg.organization ? String(reg.organization) : undefined,
-        country: reg.country ? String(reg.country) : undefined,
-        email: reg.email ? String(reg.email) : undefined,
+    const rdapRes = await fetch(`https://rdap.org/domain/${encodeURIComponent(cleanDomain)}`)
+    if (rdapRes.ok) {
+      const rdapData = await rdapRes.json() as Record<string, unknown>
+      
+      const result: WhoisResult = {
+        domain: cleanDomain,
+        raw: JSON.stringify(rdapData, null, 2),
       }
-    }
 
-    result.raw = JSON.stringify(data, null, 2)
+      if (rdapData.registrar) {
+        result.registrar = String(rdapData.registrar)
+      } else if (rdapData.port43) {
+        result.registrar = String(rdapData.port43)
+      }
 
-    try {
-      await c.env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 3600 })
-    } catch {}
-
-    return c.json(result)
-  } catch (e) {
-    try {
-      const fallbackRes = await fetch(`https://rdap.org/domain/${encodeURIComponent(cleanDomain)}`)
-      if (fallbackRes.ok) {
-        const rdapData = await fallbackRes.json() as Record<string, unknown>
-        
-        const result: WhoisResult = {
-          domain: cleanDomain,
-          raw: JSON.stringify(rdapData, null, 2),
+      const events = rdapData.events as Array<{ eventAction: string; eventDate: string }> | undefined
+      if (events) {
+        for (const event of events) {
+          if (event.eventAction === 'registration') {
+            result.createdDate = event.eventDate
+          } else if (event.eventAction === 'last changed') {
+            result.updatedDate = event.eventDate
+          } else if (event.eventAction === 'expiration') {
+            result.expiryDate = event.eventDate
+          }
         }
+      }
 
-        if (rdapData.port43) {
-          result.registrar = String(rdapData.port43)
-        }
+      const nameservers = rdapData.nameservers as Array<{ ldhName: string }> | undefined
+      if (nameservers) {
+        result.nameservers = nameservers.map(ns => ns.ldhName.toLowerCase())
+      }
 
-        const events = rdapData.events as Array<{ eventAction: string; eventDate: string }> | undefined
-        if (events) {
-          for (const event of events) {
-            if (event.eventAction === 'registration') {
-              result.createdDate = event.eventDate
-            } else if (event.eventAction === 'last changed') {
-              result.updatedDate = event.eventDate
-            } else if (event.eventAction === 'expiration') {
-              result.expiryDate = event.eventDate
+      const status = rdapData.status as string[] | undefined
+      if (status) {
+        result.status = status
+      }
+
+      const entities = rdapData.entities as Array<Record<string, unknown>> | undefined
+      if (entities) {
+        for (const entity of entities) {
+          const roles = entity.roles as string[] | undefined
+          if (roles && roles.includes('registrant')) {
+            const vcardArray = entity.vcardArray as Array<unknown> | undefined
+            if (vcardArray && Array.isArray(vcardArray[1])) {
+              const vcardItems = vcardArray[1] as Array<Array<unknown>>
+              const registrant: Record<string, string> = {}
+              
+              for (const item of vcardItems) {
+                if (Array.isArray(item) && item.length >= 2) {
+                  const key = item[0] as string
+                  const value = item[1]
+                  if (typeof value === 'string') {
+                    if (key === 'fn') {
+                      registrant.name = value
+                    } else if (key === 'org') {
+                      registrant.organization = value
+                    } else if (key === 'email') {
+                      registrant.email = value
+                    } else if (key === 'adr') {
+                      const adr = value as Array<unknown>
+                      if (Array.isArray(adr) && adr[5]) {
+                        registrant.country = String(adr[5])
+                      }
+                    }
+                  }
+                }
+              }
+              
+              if (Object.keys(registrant).length > 0) {
+                result.registrant = registrant
+              }
             }
           }
         }
-
-        const nameservers = rdapData.nameservers as Array<{ ldhName: string }> | undefined
-        if (nameservers) {
-          result.nameservers = nameservers.map(ns => ns.ldhName.toLowerCase())
-        }
-
-        const status = rdapData.status as string[] | undefined
-        if (status) {
-          result.status = status
-        }
-
-        try {
-          await c.env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 3600 })
-        } catch {}
-
-        return c.json(result)
       }
-    } catch {}
 
+      try {
+        await c.env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 3600 })
+      } catch {}
+
+      return c.json(result)
+    }
+    
+    return c.json({ error: 'WHOIS query failed', details: `HTTP ${rdapRes.status}` }, 502)
+  } catch (e) {
     return c.json({ error: (e as Error).message }, 500)
   }
 })

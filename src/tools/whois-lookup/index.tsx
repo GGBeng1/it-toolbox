@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Search, Globe, Calendar, User, Building, AlertCircle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { ToolLayout } from '@/components/tool/ToolLayout'
 import { useAppStore } from '@/store/app'
 import { meta } from './meta'
@@ -28,6 +29,7 @@ export default function WhoisLookup() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const { addRecentTool } = useAppStore()
+  const { t } = useTranslation()
 
   const lookup = useCallback(async () => {
     if (!domain.trim()) return
@@ -49,11 +51,11 @@ export default function WhoisLookup() {
         setResult(data)
       }
     } catch (e) {
-      setError('查询失败，请检查网络连接或稍后重试')
+      setError(t('tools.whois-lookup.error'))
     }
     
     setIsLoading(false)
-  }, [domain, addRecentTool])
+  }, [domain, addRecentTool, t])
 
   const reset = () => {
     setDomain('')
@@ -71,7 +73,7 @@ export default function WhoisLookup() {
             value={domain}
             onChange={e => setDomain(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && lookup()}
-            placeholder="输入域名，如 example.com"
+            placeholder={t('tools.whois-lookup.placeholder')}
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-bg-surface border border-border-base text-text-primary focus:outline-none focus:border-accent"
           />
         </div>
@@ -81,7 +83,7 @@ export default function WhoisLookup() {
           ) : (
             <Search className="w-4 h-4" />
           )}
-          查询
+          {t('tools.whois-lookup.button')}
         </button>
       </div>
 
@@ -106,7 +108,7 @@ export default function WhoisLookup() {
               <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
                 <div className="flex items-center gap-2 mb-2">
                   <Building className="w-4 h-4 text-text-muted" />
-                  <span className="text-xs text-text-muted uppercase">注册商</span>
+                  <span className="text-xs text-text-muted uppercase">{t('tools.whois-lookup.registrar')}</span>
                 </div>
                 <p className="text-sm text-text-primary">{result.registrar}</p>
               </div>
@@ -116,7 +118,7 @@ export default function WhoisLookup() {
               <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
                 <div className="flex items-center gap-2 mb-2">
                   <User className="w-4 h-4 text-text-muted" />
-                  <span className="text-xs text-text-muted uppercase">注册人</span>
+                  <span className="text-xs text-text-muted uppercase">{t('tools.whois-lookup.registrant')}</span>
                 </div>
                 <p className="text-sm text-text-primary">{result.registrant.organization}</p>
               </div>
@@ -126,7 +128,7 @@ export default function WhoisLookup() {
               <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="w-4 h-4 text-text-muted" />
-                  <span className="text-xs text-text-muted uppercase">创建日期</span>
+                  <span className="text-xs text-text-muted uppercase">{t('tools.whois-lookup.createdDate')}</span>
                 </div>
                 <p className="text-sm font-mono text-text-primary">{result.createdDate}</p>
               </div>
@@ -136,7 +138,7 @@ export default function WhoisLookup() {
               <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="w-4 h-4 text-text-muted" />
-                  <span className="text-xs text-text-muted uppercase">过期日期</span>
+                  <span className="text-xs text-text-muted uppercase">{t('tools.whois-lookup.expiryDate')}</span>
                 </div>
                 <p className="text-sm font-mono text-text-primary">{result.expiryDate}</p>
               </div>
@@ -145,7 +147,7 @@ export default function WhoisLookup() {
 
           {result.nameservers && result.nameservers.length > 0 && (
             <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
-              <h3 className="text-xs text-text-muted uppercase mb-2">名称服务器</h3>
+              <h3 className="text-xs text-text-muted uppercase mb-2">{t('tools.whois-lookup.nameservers')}</h3>
               <div className="flex flex-wrap gap-2">
                 {result.nameservers.map((ns, i) => (
                   <span key={i} className="px-2 py-1 rounded bg-bg-raised text-xs font-mono text-text-primary">
@@ -158,7 +160,7 @@ export default function WhoisLookup() {
 
           {result.status && result.status.length > 0 && (
             <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
-              <h3 className="text-xs text-text-muted uppercase mb-2">域名状态</h3>
+              <h3 className="text-xs text-text-muted uppercase mb-2">{t('tools.whois-lookup.status')}</h3>
               <div className="flex flex-wrap gap-2">
                 {result.status.map((s, i) => (
                   <span key={i} className="px-2 py-1 rounded bg-accent/10 text-xs text-accent">
@@ -171,7 +173,7 @@ export default function WhoisLookup() {
 
           {result.raw && (
             <div className="p-4 rounded-xl bg-bg-surface border border-border-base">
-              <h3 className="text-xs text-text-muted uppercase mb-2">原始数据</h3>
+              <h3 className="text-xs text-text-muted uppercase mb-2">{t('tools.whois-lookup.rawData')}</h3>
               <pre className="text-xs font-mono text-text-secondary whitespace-pre-wrap max-h-64 overflow-y-auto">
                 {result.raw}
               </pre>
@@ -182,7 +184,7 @@ export default function WhoisLookup() {
 
       {!result && !error && !isLoading && (
         <div className="h-48 rounded-xl bg-bg-raised border border-border-base flex items-center justify-center">
-          <p className="text-text-muted text-sm">输入域名查询WHOIS信息</p>
+          <p className="text-text-muted text-sm">{t('tools.whois-lookup.placeholderText')}</p>
         </div>
       )}
     </ToolLayout>
