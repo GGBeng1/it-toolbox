@@ -3,7 +3,7 @@ import { Globe } from 'lucide-react'
 import { LANGUAGES, type LanguageCode } from '@/i18n'
 
 export function LanguageToggle() {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
 
   const handleLanguageChange = (code: LanguageCode) => {
     i18n.changeLanguage(code)
@@ -14,7 +14,7 @@ export function LanguageToggle() {
     <div className="relative group">
       <button
         className="flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-raised transition-colors"
-        aria-label="切换语言"
+        aria-label={t('language.title')}
       >
         <Globe className="w-5 h-5" />
       </button>

@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
 import { Sun, Moon, Monitor, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAppStore, type ThemeMode } from '@/store/app'
-
-const themeOptions: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { value: 'light', label: '亮色', icon: Sun },
-  { value: 'dark', label: '暗色', icon: Moon },
-  { value: 'system', label: '跟随系统', icon: Monitor },
-]
 
 export function ThemeToggle() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { themeMode, resolvedTheme, setThemeMode } = useAppStore()
+  const { t } = useTranslation()
+
+  const themeOptions = [
+    { value: 'light' as ThemeMode, label: t('theme.light'), icon: Sun },
+    { value: 'dark' as ThemeMode, label: t('theme.dark'), icon: Moon },
+    { value: 'system' as ThemeMode, label: t('theme.system'), icon: Monitor },
+  ]
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,7 +61,7 @@ export function ThemeToggle() {
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         className="theme-toggle-btn flex items-center gap-1"
-        aria-label="切换主题"
+        aria-label={t('theme.toggle')}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls="theme-menu"
@@ -72,7 +74,7 @@ export function ThemeToggle() {
         <div
           id="theme-menu"
           role="listbox"
-          aria-label="选择主题"
+          aria-label={t('theme.select')}
           className="absolute right-0 mt-2 w-36 py-1 bg-bg-surface border border-border-base rounded-lg shadow-theme-lg animate-slide-up z-50"
         >
           {themeOptions.map((option) => {
@@ -111,6 +113,7 @@ export function ThemeToggle() {
 
 export function ThemeToggleSimple() {
   const { themeMode, resolvedTheme, setThemeMode } = useAppStore()
+  const { t } = useTranslation()
 
   const handleToggle = () => {
     if (themeMode === 'system') {
@@ -121,7 +124,7 @@ export function ThemeToggleSimple() {
   }
 
   const Icon = resolvedTheme === 'dark' ? Moon : Sun
-  const label = resolvedTheme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'
+  const label = resolvedTheme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')
 
   return (
     <button

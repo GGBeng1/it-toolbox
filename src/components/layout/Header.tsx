@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Search, Command, Menu, ExternalLink } from 'lucide-react'
+import { Search, Command, Menu, ExternalLink, Github } from 'lucide-react'
 import { Command as Cmd, CommandInput, CommandList, CommandItem, CommandEmpty, CommandGroup } from 'cmdk'
 import { searchTools } from '@/registry'
 import type { ToolMeta } from '@toolbox/types/tool'
@@ -69,7 +69,7 @@ export function Header() {
             className="flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-raised transition-colors"
             aria-label={t('header.github')}
           >
-            <ExternalLink className="w-5 h-5" />
+            <Github className="w-5 h-5" />
           </a>
           <LanguageToggle />
           <ThemeToggle />

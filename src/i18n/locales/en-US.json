@@ -62,7 +62,11 @@
   "theme": {
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "toggle": "Toggle theme",
+    "select": "Select theme",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
   },
   "language": {
     "title": "Language",
