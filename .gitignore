@@ -12,5 +12,3 @@ package-lock.json
 
 .pnpm-debug.log
 
-# Fork 用户本地配置文件（不应提交）
-wrangler.toml
